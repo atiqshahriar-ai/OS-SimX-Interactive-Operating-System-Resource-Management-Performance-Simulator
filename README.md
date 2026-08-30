@@ -68,13 +68,6 @@ The simulator demonstrates important Operating System concepts including:
 
 No external backend or database is required.
 
-## ▶️ Running Locally
-
-Clone the repository:
-
-```bash
-git clone https://github.com/atiqshahriar-ai/OS-SimX-Interactive-Operating-System-Resource-Management-Performance-Simulator.git
-
 ## 📸 Screenshots
 
 ### 🖥️ Dashboard
@@ -94,3 +87,10 @@ git clone https://github.com/atiqshahriar-ai/OS-SimX-Interactive-Operating-Syste
 
 ### 🧪 Experiment Lab
 ![Experiment Lab](screenshots/experiment-lab.png)
+
+## ▶️ Running Locally
+
+Clone the repository:
+
+```bash
+git clone https://github.com/atiqshahriar-ai/OS-SimX-Interactive-Operating-System-Resource-Management-Performance-Simulator.git
