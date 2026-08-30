@@ -74,3 +74,23 @@ Clone the repository:
 
 ```bash
 git clone https://github.com/atiqshahriar-ai/OS-SimX-Interactive-Operating-System-Resource-Management-Performance-Simulator.git
+
+## 📸 Screenshots
+
+### 🖥️ Dashboard
+![OS-SimX Overview](screenshots/overview.png)
+
+### 🧠 Memory Management
+![Memory Manager](screenshots/memory-manager.png)
+
+### ⚙️ CPU Scheduling
+![CPU Scheduling](screenshots/cpu-scheduling.png)
+
+### 💿 Disk Scheduling
+![Disk Scheduler](screenshots/disk-scheduler.png)
+
+### 🔒 Deadlock Management
+![Deadlock Lab](screenshots/deadlock-lab.png)
+
+### 🧪 Experiment Lab
+![Experiment Lab](screenshots/experiment-lab.png)
