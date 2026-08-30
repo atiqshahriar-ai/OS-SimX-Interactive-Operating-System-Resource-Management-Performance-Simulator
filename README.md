@@ -6,6 +6,12 @@ OS-SimX is an interactive web-based Operating System simulator designed to visua
 
 **[Launch OS-SimX](https://atiqshahriar-ai.github.io/OS-SimX-Interactive-Operating-System-Resource-Management-Performance-Simulator/)**
 
+## 🎥 Video Presentation
+
+A short video demonstration of OS-SimX, including the major features, interactive simulations, and performance analysis.
+
+▶️ **[Watch the Video Presentation on YouTube](https://youtu.be/aheoF2fjVXM)**
+
 ## 📌 Features
 
 OS-SimX currently includes interactive simulations for:
