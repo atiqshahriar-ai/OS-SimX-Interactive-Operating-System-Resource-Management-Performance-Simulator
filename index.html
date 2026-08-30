@@ -1,0 +1,3933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OS-SimX — Operating System Resource Simulator</title>
+<meta name="description" content="Interactive Operating System Resource Management & Performance Simulator">
+<style>
+:root{
+  --bg:#0a0d14;--panel:#111621;--panel2:#171d2a;--border:#273044;
+  --text:#e8edf7;--muted:#8d99ad;--accent:#6ea8fe;--accent2:#8b7cff;
+  --good:#43d19e;--warn:#f2bd5b;--danger:#ff6b7a;--cyan:#52d6e8;
+  --shadow:0 18px 50px rgba(0,0,0,.32);--radius:16px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:radial-gradient(circle at 15% 0%,#18213a 0,#0a0d14 36%),var(--bg);
+  color:var(--text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  min-height:100vh
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:255px;background:rgba(10,13,20,.82);border-right:1px solid var(--border);
+  padding:22px 16px;position:fixed;inset:0 auto 0 0;z-index:10;backdrop-filter:blur(18px)
+}
+.brand{display:flex;gap:11px;align-items:center;padding:4px 8px 24px}
+.logo{
+  width:40px;height:40px;border-radius:12px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:grid;place-items:center;font-weight:900;
+  box-shadow:0 10px 30px rgba(110,168,254,.22)
+}
+.brand h1{font-size:18px;margin:0}
+.brand small{display:block;color:var(--muted);font-size:10px;margin-top:2px;letter-spacing:.7px}
+.nav{display:grid;gap:7px}
+.nav button{
+  border:1px solid transparent;background:transparent;color:var(--muted);
+  text-align:left;padding:12px 13px;border-radius:11px;
+  display:flex;align-items:center;gap:11px
+}
+.nav button:hover{background:var(--panel);color:var(--text)}
+.nav button.active{
+  background:linear-gradient(90deg,rgba(110,168,254,.14),rgba(139,124,255,.08));
+  border-color:#33405c;color:var(--text)
+}
+.nav .ico{width:22px;text-align:center}
+.sidebar-footer{
+  position:absolute;bottom:18px;left:18px;right:18px;color:#657188;
+  font-size:11px;line-height:1.5
+}
+.main{margin-left:255px;width:calc(100% - 255px);padding:28px 30px 50px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
+.eyebrow{color:var(--accent);font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase}
+h2{font-size:28px;margin:5px 0 0;letter-spacing:-.6px}
+.subtitle{color:var(--muted);margin-top:6px;font-size:13px}
+.actions{display:flex;gap:9px}
+.btn{
+  border:1px solid var(--border);background:var(--panel);color:var(--text);
+  padding:9px 13px;border-radius:10px;font-size:12px
+}
+.btn:hover{border-color:#405071;background:var(--panel2)}
+.btn.primary{background:linear-gradient(135deg,#477fd9,#735fe0);border-color:transparent}
+.btn.danger{color:#ff9da7}
+.btn.good{color:#73e6bb}
+.page{display:none}
+.page.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px}
+.card{
+  background:linear-gradient(145deg,rgba(23,29,42,.94),rgba(15,20,30,.94));
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;box-shadow:var(--shadow)
+}
+.metric-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}
+.metric{font-size:25px;font-weight:800;margin-top:8px}
+.metric-sub{font-size:10px;color:#68748a;margin-top:5px}
+.grid2{display:grid;grid-template-columns:1.25fr .75fr;gap:15px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}
+.panel{
+  background:rgba(17,22,33,.9);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden
+}
+.panel-head{
+  padding:15px 17px;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center
+}
+.panel-head h3{font-size:13px;margin:0}
+.panel-head span{font-size:10px;color:var(--muted)}
+.panel-body{padding:17px}
+.controls{display:flex;flex-wrap:wrap;gap:9px;align-items:end}
+.field{display:grid;gap:6px;min-width:115px}
+.field label{
+  font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px
+}
+.field input,.field select{
+  width:100%;background:#0b1019;color:var(--text);
+  border:1px solid var(--border);border-radius:9px;padding:9px 10px;outline:none
+}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.table-wrap{overflow:auto}
+.table{width:100%;border-collapse:collapse;font-size:11px}
+.table th{
+  color:#748096;text-align:left;font-weight:700;text-transform:uppercase;
+  font-size:9px;letter-spacing:.7px;background:#0d121c
+}
+.table th,.table td{padding:10px 11px;border-bottom:1px solid #20283a}
+.table td{color:#cbd3e1}
+.table tr:last-child td{border-bottom:0}
+.table .num{text-align:right;font-variant-numeric:tabular-nums}
+.inline-input{
+  width:100%;background:#0b1019;color:var(--text);
+  border:1px solid transparent;border-radius:7px;padding:6px 7px;
+  font-size:10px;outline:none
+}
+.inline-input:hover{border-color:#2b3850}
+.inline-input:focus{border-color:var(--accent);background:#101827}
+.pid-input{font-weight:800}
+.num-input{max-width:85px}
+.matrix-input{
+  width:42px;text-align:center;background:#0b1019;color:var(--text);
+  border:1px solid #273044;border-radius:6px;padding:6px 2px;font-size:10px;outline:none
+}
+.matrix-input:focus{border-color:var(--accent)}
+.matrix{display:grid;gap:7px;margin-top:13px}
+.matrix-row{display:grid;grid-template-columns:55px repeat(3,1fr);gap:6px;align-items:center}
+.matrix-row span{font-size:9px;color:var(--muted);font-weight:800}
+.badge{
+  display:inline-flex;padding:3px 7px;border-radius:999px;
+  font-size:9px;font-weight:800
+}
+.badge.good{background:rgba(67,209,158,.12);color:var(--good)}
+.badge.warn{background:rgba(242,189,91,.12);color:var(--warn)}
+.badge.danger{background:rgba(255,107,122,.12);color:var(--danger)}
+.gantt{
+  display:flex;height:72px;align-items:stretch;margin-top:12px;
+  border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#0b1019
+}
+.gseg{
+  position:relative;min-width:34px;border-right:1px solid rgba(255,255,255,.16);
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;
+  background:linear-gradient(135deg,rgba(110,168,254,.26),rgba(139,124,255,.18))
+}
+.gseg:nth-child(3n){background:linear-gradient(135deg,rgba(82,214,232,.24),rgba(110,168,254,.15))}
+.gseg:nth-child(4n){background:linear-gradient(135deg,rgba(139,124,255,.28),rgba(255,107,122,.12))}
+.gseg small{
+  position:absolute;bottom:3px;right:4px;color:#8c99ad;font-size:8px
+}
+.chart{width:100%;height:220px;display:block}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;color:var(--muted);font-size:9px}
+.dot{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  margin-right:4px;background:var(--accent)
+}
+.memory{
+  display:flex;height:100px;border:1px solid var(--border);border-radius:11px;
+  overflow:hidden;background:#0b1019;margin:14px 0
+}
+.mem-block{
+  display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(255,255,255,.15);
+  font-size:9px;font-weight:800;min-width:2px;overflow:hidden;white-space:nowrap
+}
+.mem-free{
+  background:repeating-linear-gradient(135deg,#111824,#111824 7px,#151d2a 7px,#151d2a 14px);
+  color:#657188
+}
+.mem-p{background:linear-gradient(135deg,rgba(110,168,254,.35),rgba(139,124,255,.18))}
+.rag{
+  min-height:270px;position:relative;background:#0b1019;
+  border:1px solid var(--border);border-radius:12px;overflow:hidden
+}
+.rag svg{width:100%;height:270px}
+.node-p{fill:#6ea8fe}
+.node-r{fill:#8b7cff}
+.node-label{
+  fill:#fff;font-size:11px;font-weight:800;text-anchor:middle;
+  dominant-baseline:middle
+}
+.edge{stroke:#65748d;color:#65748d;stroke-width:1.5;fill:none;marker-end:url(#arrow)}
+.edge-danger{stroke:#ff6b7a;color:#ff6b7a}
+.alert{
+  padding:11px 13px;border-radius:10px;font-size:11px;margin-top:12px;border:1px solid
+}
+.alert.good{
+  background:rgba(67,209,158,.07);border-color:rgba(67,209,158,.25);color:#91edca
+}
+.alert.danger{
+  background:rgba(255,107,122,.07);border-color:rgba(255,107,122,.28);color:#ffadb5
+}
+.alert.warn{
+  background:rgba(242,189,91,.07);border-color:rgba(242,189,91,.25);color:#f7d38b
+}
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.mini-kpi{
+  background:#0c111b;border:1px solid #222b3c;padding:11px;border-radius:10px
+}
+.mini-kpi b{display:block;font-size:16px}
+.mini-kpi span{color:var(--muted);font-size:9px}
+.tabs{
+  display:flex;gap:5px;padding:4px;background:#0c111a;
+  border:1px solid var(--border);border-radius:11px;margin-bottom:15px
+}
+.tabs button{
+  flex:1;background:transparent;border:0;color:var(--muted);
+  padding:9px;border-radius:8px;font-size:10px
+}
+.tabs button.active{background:#1b2435;color:var(--text)}
+.codebox{
+  font-family:"JetBrains Mono",ui-monospace,monospace;background:#090d14;
+  border:1px solid var(--border);border-radius:11px;padding:13px;color:#aab6ca;
+  font-size:10px;line-height:1.65;white-space:pre-wrap
+}
+.empty{padding:35px;text-align:center;color:var(--muted);font-size:11px}
+.toast{
+  position:fixed;right:25px;bottom:25px;background:#172033;border:1px solid #34415a;
+  padding:12px 15px;border-radius:10px;font-size:11px;box-shadow:var(--shadow);
+  opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s;z-index:99
+}
+.toast.show{opacity:1;transform:none}
+.modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;
+  place-items:center;z-index:50;padding:20px
+}
+.modal.open{display:grid}
+.modal-card{
+  width:min(700px,100%);background:#111722;border:1px solid var(--border);
+  border-radius:18px;box-shadow:var(--shadow);padding:20px
+}
+textarea{
+  width:100%;min-height:170px;background:#090d14;color:var(--text);
+  border:1px solid var(--border);border-radius:10px;padding:12px;resize:vertical;
+  font:11px ui-monospace,monospace
+}
+@media(max-width:1050px){
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .sidebar{width:210px}
+  .main{margin-left:210px;width:calc(100% - 210px)}
+}
+@media(max-width:720px){
+  .sidebar{
+    position:static;width:100%;height:auto;border-right:0;
+    border-bottom:1px solid var(--border)
+  }
+  .sidebar-footer{display:none}
+  .app{display:block}
+  .main{margin:0;width:100%;padding:18px}
+  .nav{grid-template-columns:repeat(2,1fr)}
+  .cards{grid-template-columns:1fr 1fr}
+  .topbar{display:block}
+  .actions{margin-top:14px}
+  .controls{display:grid;grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo">OS</div>
+    <div>
+      <h1>OS-SimX</h1>
+      <small>RESOURCE LAB v1.0</small>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="active" data-page="dashboard"><span class="ico">◈</span>Overview</button>
+    <button data-page="scheduler"><span class="ico">⏱</span>CPU Scheduler</button>
+    <button data-page="memory"><span class="ico">▦</span>Memory Manager</button>
+    <button data-page="deadlock"><span class="ico">◇</span>Deadlock Lab</button>
+    <button data-page="disk"><span class="ico">◉</span>Disk Scheduler</button>
+    <button data-page="experiments"><span class="ico">▥</span>Experiments</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    CSE 323 · Operating System Design<br>
+    Interactive resource-management simulator
+  </div>
+</aside>
+
+<main class="main">
+
+<div class="topbar">
+  <div>
+    <div class="eyebrow">Operating System Design Laboratory</div>
+    <h2 id="pageTitle">System Overview</h2>
+    <div class="subtitle" id="pageSubtitle">
+      Explore how an OS schedules processes and manages constrained resources.
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="resetBtn">↻ Reset</button>
+    <button class="btn primary" id="demoBtn">▶ Run Demo</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<section class="page active" id="dashboard">
+
+  <div class="cards">
+    <div class="card">
+      <div class="metric-label">Processes</div>
+      <div class="metric" id="dProc">6</div>
+      <div class="metric-sub">active workload</div>
+    </div>
+
+    <div class="card">
+      <div class="metric-label">CPU Utilization</div>
+      <div class="metric" id="dCpu">—</div>
+      <div class="metric-sub">simulated workload</div>
+    </div>
+
+    <div class="card">
+      <div class="metric-label">Memory Used</div>
+      <div class="metric" id="dMem">—</div>
+      <div class="metric-sub">1024 MB physical memory</div>
+    </div>
+
+    <div class="card">
+      <div class="metric-label">System State</div>
+      <div class="metric" id="dState" style="font-size:18px">SAFE</div>
+      <div class="metric-sub">resource allocation</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Workload Snapshot</h3>
+        <span>live simulation</span>
+      </div>
+
+      <div class="panel-body">
+        <div class="gantt" id="dashGantt"></div>
+
+        <div style="height:10px"></div>
+
+        <div class="kpi-row">
+          <div class="mini-kpi">
+            <b id="dashWait">4.8</b>
+            <span>AVG WAITING TIME</span>
+          </div>
+
+          <div class="mini-kpi">
+            <b id="dashTurn">9.0</b>
+            <span>AVG TURNAROUND</span>
+          </div>
+
+          <div class="mini-kpi">
+            <b id="dashThr">0.67</b>
+            <span>THROUGHPUT / UNIT</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>OS Design Principles</h3>
+        <span>CSE 323</span>
+      </div>
+
+      <div class="panel-body">
+        <div class="alert good">
+          <b>Process Management</b><br>
+          Scheduling decisions are evaluated using measurable performance metrics.
+        </div>
+
+        <div class="alert warn">
+          <b>Resource Constraints</b><br>
+          Memory and device resources are finite; allocation strategy matters.
+        </div>
+
+        <div class="alert danger">
+          <b>Conflict Resolution</b><br>
+          Deadlock analysis detects unsafe circular dependencies.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel" style="margin-top:15px">
+    <div class="panel-head">
+      <h3>Process State Monitor</h3>
+      <span>PCB abstraction</span>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>PID</th>
+            <th>State</th>
+            <th>Arrival</th>
+            <th class="num">Burst</th>
+            <th class="num">Priority</th>
+            <th class="num">Memory</th>
+          </tr>
+        </thead>
+        <tbody id="dashTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+</section>
+
+<!-- CPU SCHEDULER -->
+<section class="page" id="scheduler">
+
+  <div class="panel">
+
+    <div class="panel-head">
+      <h3>CPU Scheduling Engine</h3>
+      <span>FCFS · SJF · Priority · Round Robin</span>
+    </div>
+
+    <div class="panel-body">
+
+      <div class="controls">
+
+        <div class="field" style="min-width:220px">
+          <label>Algorithm</label>
+          <select id="schedAlgo">
+            <option value="FCFS">First Come First Serve (FCFS)</option>
+            <option value="SJF">Shortest Job First (SJF)</option>
+            <option value="PRIORITY">Priority Scheduling</option>
+            <option value="RR">Round Robin</option>
+          </select>
+        </div>
+
+        <div class="field" id="quantumField">
+          <label>Time Quantum</label>
+          <input id="quantum" type="number" min="1" value="2">
+        </div>
+
+        <button class="btn primary" id="runSched">Run Scheduler</button>
+        <button class="btn" id="loadSched">Load Demo Workload</button>
+
+      </div>
+
+      <div class="table-wrap" style="margin-top:16px">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>PID</th>
+              <th>Arrival</th>
+              <th>Burst</th>
+              <th>Priority</th>
+              <th>Memory</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="procTable"></tbody>
+        </table>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:10px;flex-wrap:wrap">
+        <span style="font-size:10px;color:var(--muted)">
+          Edit workload parameters, add/remove processes, then run the scheduler.
+        </span>
+        <button class="btn good" id="addProcess">＋ Add Process</button>
+      </div>
+
+      <div style="margin-top:17px">
+        <div class="metric-label">Gantt Timeline</div>
+        <div class="gantt" id="gantt"></div>
+        <div id="ganttAxis"
+             style="display:flex;justify-content:space-between;color:#68748a;font-size:8px;margin-top:5px">
+        </div>
+      </div>
+
+      <div class="kpi-row" style="margin-top:15px">
+
+        <div class="mini-kpi">
+          <b id="avgWait">—</b>
+          <span>AVERAGE WAITING TIME</span>
+        </div>
+
+        <div class="mini-kpi">
+          <b id="avgTurn">—</b>
+          <span>AVERAGE TURNAROUND TIME</span>
+        </div>
+
+        <div class="mini-kpi">
+          <b id="avgResp">—</b>
+          <span>AVERAGE RESPONSE TIME</span>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:15px">
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Scheduling Analysis</h3>
+        <span>why the result matters</span>
+      </div>
+
+      <div class="panel-body" id="schedAnalysis">
+        <div class="empty">
+          Run a scheduling algorithm to generate an analysis.
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Performance Metrics</h3>
+        <span>computed from execution trace</span>
+      </div>
+
+      <div class="panel-body">
+        <canvas class="chart" id="schedChart"></canvas>
+
+        <div class="legend">
+          <span><i class="dot"></i>Waiting time</span>
+          <span><i class="dot"></i>Turnaround time</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<!-- MEMORY -->
+<section class="page" id="memory">
+
+  <div class="panel">
+
+    <div class="panel-head">
+      <h3>Memory Allocation Engine</h3>
+      <span>contiguous allocation</span>
+    </div>
+
+    <div class="panel-body">
+
+      <div class="controls">
+
+        <div class="field">
+          <label>Total Memory (MB)</label>
+          <input id="memTotal" type="number" value="1024" min="128">
+        </div>
+
+        <div class="field" style="min-width:200px">
+          <label>Strategy</label>
+          <select id="memAlgo">
+            <option value="FIRST">First Fit</option>
+            <option value="BEST">Best Fit</option>
+            <option value="WORST">Worst Fit</option>
+          </select>
+        </div>
+
+        <button class="btn primary" id="runMem">Allocate Workload</button>
+
+      </div>
+
+      <div class="memory" id="memoryMap"></div>
+
+      <div class="kpi-row">
+
+        <div class="mini-kpi">
+          <b id="memUsed">—</b>
+          <span>USED MEMORY</span>
+        </div>
+
+        <div class="mini-kpi">
+          <b id="memFree">—</b>
+          <span>LARGEST FREE BLOCK</span>
+        </div>
+
+        <div class="mini-kpi">
+          <b id="memFrag">—</b>
+          <span>EXTERNAL FRAGMENTATION</span>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:15px">
+
+    <div class="panel">
+
+      <div class="panel-head">
+        <h3>Allocation Table</h3>
+        <span>partition placement</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>PID</th>
+              <th>Requested</th>
+              <th>Allocated</th>
+              <th>Placement</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="memTable"></tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <div class="panel">
+
+      <div class="panel-head">
+        <h3>Memory Analysis</h3>
+        <span>allocator behavior</span>
+      </div>
+
+      <div class="panel-body" id="memAnalysis"></div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- DEADLOCK -->
+<section class="page" id="deadlock">
+
+  <div class="grid2">
+
+    <div class="panel">
+
+      <div class="panel-head">
+        <h3>Resource Allocation Graph</h3>
+        <span>cycle detection</span>
+      </div>
+
+      <div class="panel-body">
+
+        <div class="rag" id="rag"></div>
+
+        <div id="deadAlert" class="alert good">
+          No deadlock detected in the current resource graph.
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="panel">
+
+      <div class="panel-head">
+        <h3>Banker's Safety Analysis</h3>
+        <span>avoidance strategy</span>
+      </div>
+
+      <div class="panel-body">
+
+        <div class="controls">
+          <button class="btn primary" id="runBanker">
+            Run Safety Check
+          </button>
+
+          <button class="btn" id="loadDeadDemo">
+            Load Deadlock Scenario
+          </button>
+
+          <button class="btn" id="loadSafeDemo">
+            Load Safe Scenario
+          </button>
+        </div>
+
+        <div id="bankerResult" style="margin-top:15px">
+          <div class="empty">
+            Run the safety check to evaluate the current allocation state.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel" style="margin-top:15px">
+
+    <div class="panel-head">
+      <h3>Resource State</h3>
+      <span>allocation · maximum · available</span>
+    </div>
+
+    <div class="table-wrap">
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Process</th>
+            <th>Allocation</th>
+            <th>Maximum</th>
+            <th>Need</th>
+            <th>Available</th>
+          </tr>
+        </thead>
+
+        <tbody id="resourceTable"></tbody>
+      </table>
+
+    </div>
+
+  </div>
+
+  <div class="panel" style="margin-top:15px">
+
+    <div class="panel-head">
+      <h3>How the Safety Test Works</h3>
+      <span>Banker's Algorithm</span>
+    </div>
+
+    <div class="panel-body">
+
+      <div class="kpi-row">
+
+        <div class="mini-kpi">
+          <b>1</b>
+          <span>CALCULATE NEED = MAX − ALLOCATION</span>
+        </div>
+
+        <div class="mini-kpi">
+          <b>2</b>
+          <span>FIND A PROCESS WITH NEED ≤ WORK</span>
+        </div>
+
+        <div class="mini-kpi">
+          <b>3</b>
+          <span>RELEASE ITS ALLOCATION INTO WORK</span>
+        </div>
+
+      </div>
+
+      <div class="alert warn" style="margin-top:12px">
+        A <b>safe sequence</b> proves that every process can eventually complete
+        under the current resource assumptions. An <b>unsafe state</b> means the
+        OS cannot guarantee such a sequence.
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- DISK -->
+<section class="page" id="disk">
+
+  <div class="panel">
+
+    <div class="panel-head">
+      <h3>Disk Scheduling Engine</h3>
+      <span>auxiliary storage management</span>
+    </div>
+
+    <div class="panel-body">
+
+      <div class="controls">
+
+        <div class="field" style="min-width:260px">
+          <label>Request Queue</label>
+          <input id="diskQueue" value="98,183,37,122,14,124,65,67">
+        </div>
+
+        <div class="field">
+          <label>Initial Head</label>
+          <input id="diskHead" type="number" value="53">
+        </div>
+
+        <div class="field">
+          <label>Disk Size</label>
+          <input id="diskSize" type="number" value="200">
+        </div>
+
+        <div class="field" style="min-width:170px">
+          <label>Algorithm</label>
+          <select id="diskAlgo">
+            <option>FCFS</option>
+            <option>SSTF</option>
+            <option>SCAN</option>
+            <option>CSCAN</option>
+            <option>LOOK</option>
+            <option>CLOOK</option>
+          </select>
+        </div>
+
+        <button class="btn primary" id="runDisk">Run Scheduler</button>
+        <button class="btn" id="compareDisk">
+          Compare All
+        </button>
+
+      </div>
+
+      <div style="margin-top:17px">
+        <div class="metric-label">Head Movement</div>
+        <div class="gantt" id="diskTimeline"></div>
+      </div>
+
+      <div class="kpi-row" style="margin-top:15px">
+
+        <div class="mini-kpi">
+          <b id="headMove">—</b>
+          <span>TOTAL HEAD MOVEMENT</span>
+        </div>
+
+        <div class="mini-kpi">
+          <b id="diskAvg">—</b>
+          <span>AVERAGE SEEK DISTANCE</span>
+        </div>
+
+        <div class="mini-kpi">
+          <b id="diskCount">—</b>
+          <span>REQUESTS SERVED</span>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:15px">
+
+    <div class="panel">
+
+      <div class="panel-head">
+        <h3>Seek Path</h3>
+        <span>execution order</span>
+      </div>
+
+      <div class="panel-body" id="diskPath">
+        <div class="empty">Run an algorithm.</div>
+      </div>
+
+    </div>
+
+    <div class="panel">
+
+      <div class="panel-head">
+        <h3>Storage Analysis</h3>
+        <span>performance interpretation</span>
+      </div>
+
+      <div class="panel-body" id="diskAnalysis"></div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- EXPERIMENTS -->
+<section class="page" id="experiments">
+
+  <div class="panel">
+
+    <div class="panel-head">
+      <h3>Comparative Experiment Lab</h3>
+      <span>same workload · different policies</span>
+    </div>
+
+    <div class="panel-body">
+
+      <div class="controls">
+        <button class="btn primary" id="runExperiment">
+          Run Full Benchmark
+        </button>
+
+        <button class="btn" id="exportResults">
+          Export Results
+        </button>
+      </div>
+
+      <div class="table-wrap" style="margin-top:16px">
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Scheduling Policy</th>
+              <th>Avg Waiting</th>
+              <th>Avg Turnaround</th>
+              <th>Avg Response</th>
+              <th>Observation</th>
+            </tr>
+          </thead>
+
+          <tbody id="expTable"></tbody>
+
+        </table>
+
+      </div>
+
+      <div class="panel" style="margin-top:15px;background:#0c111a">
+
+        <div class="panel-head">
+          <h3>Experiment Interpretation</h3>
+          <span>design judgment</span>
+        </div>
+
+        <div class="panel-body" id="expAnalysis">
+          <div class="empty">
+            Run the benchmark to compare scheduling strategies.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div class="grid3" style="margin-top:15px">
+
+    <div class="card">
+      <div class="metric-label">Best Waiting Time</div>
+      <div class="metric" id="bestWait">—</div>
+      <div class="metric-sub">lowest average</div>
+    </div>
+
+    <div class="card">
+      <div class="metric-label">Best Responsiveness</div>
+      <div class="metric" id="bestResp">—</div>
+      <div class="metric-sub">lowest response time</div>
+    </div>
+
+    <div class="card">
+      <div class="metric-label">Recommended</div>
+      <div class="metric" id="recommended" style="font-size:18px">—</div>
+      <div class="metric-sub">for this workload</div>
+    </div>
+
+  </div>
+
+</section>
+
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="process.js"></script>
+<script src="scheduler.js"></script>
+<script src="memory.js"></script>
+<script src="filesystem.js"></script>
+<script src="deadlock.js"></script>
+<script src="disk.js"></script>
+
+<script>
+"use strict";
+
+const state = {
+  processes: [
+    {pid:"P1",arrival:0,burst:7,priority:2,memory:180},
+    {pid:"P2",arrival:1,burst:4,priority:1,memory:120},
+    {pid:"P3",arrival:2,burst:2,priority:3,memory:220},
+    {pid:"P4",arrival:3,burst:6,priority:2,memory:140},
+    {pid:"P5",arrival:4,burst:3,priority:4,memory:90},
+    {pid:"P6",arrival:6,burst:5,priority:1,memory:160}
+  ],
+
+  resources: {
+    allocation:[[0,1,0],[2,0,0],[0,0,1]],
+    maximum:[[1,1,0],[2,1,1],[1,0,1]],
+    available:[1,0,0],
+    request:[[0,0,0],[0,0,0],[0,0,0]]
+  },
+
+  lastExperiment:null
+};
+
+const $ = id => document.getElementById(id);
+
+const avg = a =>
+  a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0;
+
+const fmt = n =>
+  Number(n).toFixed(2).replace(/\.00$/,"");
+
+function toast(msg){
+  const t=$("toast");
+  t.textContent=msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g,m=>({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  }[m]));
+}
+
+function renderProcTable(target="procTable"){
+
+  const html=state.processes.map((p,i)=>`
+    <tr>
+
+      <td>
+        <input
+          class="inline-input pid-input"
+          data-i="${i}"
+          value="${esc(p.pid)}"
+          maxlength="5">
+      </td>
+
+      <td>
+        <input
+          class="inline-input num-input"
+          data-i="${i}"
+          data-k="arrival"
+          type="number"
+          min="0"
+          value="${p.arrival}">
+      </td>
+
+      <td>
+        <input
+          class="inline-input num-input"
+          data-i="${i}"
+          data-k="burst"
+          type="number"
+          min="1"
+          value="${p.burst}">
+      </td>
+
+      <td>
+        <input
+          class="inline-input num-input"
+          data-i="${i}"
+          data-k="priority"
+          type="number"
+          min="1"
+          value="${p.priority}">
+      </td>
+
+      <td>
+        <input
+          class="inline-input num-input"
+          data-i="${i}"
+          data-k="memory"
+          type="number"
+          min="1"
+          value="${p.memory}">
+      </td>
+
+      <td>
+        <button
+          class="btn danger remove-process"
+          data-i="${i}"
+          title="Remove process">
+          ✕
+        </button>
+      </td>
+
+    </tr>
+  `).join("");
+
+  $(target).innerHTML=html;
+
+  $(target).querySelectorAll("input").forEach(inp=>{
+
+    inp.addEventListener("change",()=>{
+
+      const i=+inp.dataset.i;
+
+      if(inp.classList.contains("pid-input")){
+        state.processes[i].pid=inp.value.trim()||`P${i+1}`;
+      }else{
+        state.processes[i][inp.dataset.k]=Math.max(
+          inp.dataset.k==="burst"||inp.dataset.k==="memory" ? 1 : 0,
+          +inp.value||0
+        );
+      }
+
+      renderProcTable();
+      renderDashboard();
+
+    });
+
+  });
+
+  $(target).querySelectorAll(".remove-process").forEach(btn=>{
+
+    btn.addEventListener("click",()=>{
+
+      if(state.processes.length<=1){
+        toast("At least one process is required");
+        return;
+      }
+
+      state.processes.splice(+btn.dataset.i,1);
+
+      renderProcTable();
+      renderDashboard();
+
+      toast("Process removed");
+
+    });
+
+  });
+
+}
+
+function addProcess(){
+
+  const n = state.processes.length + 1;
+
+  const process = ProcessAPI.create({
+    name: `P${n}`,
+    priority: 2,
+    arrival: state.processes.length,
+    burst: 4,
+    memory: 100,
+    owner: "user"
+  });
+
+  state.processes.push({
+    pid: `P${process.pid}`,
+    arrival: process.arrival,
+    burst: process.burst,
+    priority: process.priority,
+    memory: process.memory
+  });
+
+  renderProcTable();
+  renderDashboard();
+
+  toast(`P${process.pid} added`);
+
+}
+
+function renderDashboard(){
+
+  $("dashTable").innerHTML=state.processes.map((p,i)=>`
+    <tr>
+      <td><b>${p.pid}</b></td>
+
+      <td>
+        <span class="badge ${i===0?"warn":"good"}">
+          ${i===0?"RUNNING":"READY"}
+        </span>
+      </td>
+
+      <td>${p.arrival}</td>
+      <td class="num">${p.burst}</td>
+      <td class="num">${p.priority}</td>
+      <td class="num">${p.memory} MB</td>
+    </tr>
+  `).join("");
+
+  const sched=simulate("RR",2,state.processes);
+  const metrics=Object.values(sched.metrics);
+  const totalBurst=state.processes.reduce((sum,p)=>sum+p.burst,0);
+  const firstArrival=state.processes.length
+    ? Math.min(...state.processes.map(p=>p.arrival))
+    : 0;
+  const elapsed=Math.max(0,sched.finish-firstArrival);
+  const cpuUtil=elapsed ? (totalBurst/elapsed)*100 : 0;
+  const memoryTotal=Math.max(128,+$("memTotal").value||1024);
+  const memoryUsed=state.processes.reduce((sum,p)=>sum+p.memory,0);
+  const banker=bankers(deadlockData());
+
+  $("dashGantt").innerHTML=renderGantt(sched.timeline);
+
+  $("dashWait").textContent=fmt(avg(metrics.map(x=>x.wait)));
+  $("dashTurn").textContent=fmt(avg(metrics.map(x=>x.turn)));
+  $("dashThr").textContent=fmt(state.processes.length/Math.max(1,sched.finish));
+
+  $("dProc").textContent=state.processes.length;
+  $("dCpu").textContent=`${fmt(Math.min(100,cpuUtil))}%`;
+  $("dMem").textContent=`${fmt(Math.min(100,(memoryUsed/memoryTotal)*100))}%`;
+  $("dState").textContent=banker.safe ? "SAFE" : "UNSAFE";
+
+}
+
+function validateWorkload(){
+
+  const seen=new Set();
+
+  for(const p of state.processes){
+
+    if(!p.pid || seen.has(p.pid))
+      return "Process IDs must be unique.";
+
+    seen.add(p.pid);
+
+    if(
+      p.arrival<0 ||
+      p.burst<=0 ||
+      p.priority<=0 ||
+      p.memory<=0
+    )
+      return "Arrival, burst, priority and memory values must be positive.";
+
+  }
+
+  return "";
+
+}
+
+function simulate(algo,quantum,procs){
+
+  const ps=procs.map(p=>({
+    ...p,
+    remaining:p.burst,
+    first:null,
+    completion:null
+  }));
+
+  let time=0;
+  let timeline=[];
+  let ready=[];
+  let done=0;
+  let idx=0;
+
+  ps.sort((a,b)=>
+    a.arrival-b.arrival ||
+    a.pid.localeCompare(b.pid)
+  );
+
+  const addArrivals=()=>{
+
+    while(
+      idx<ps.length &&
+      ps[idx].arrival<=time
+    ){
+      if(!ready.includes(ps[idx]))
+        ready.push(ps[idx]);
+
+      idx++;
+    }
+
+  };
+
+  if(!ps.length)
+    return {
+      timeline:[],
+      metrics:{},
+      finish:0
+    };
+
+  time=Math.max(0,ps[0].arrival);
+
+  addArrivals();
+
+  while(done<ps.length){
+
+    if(!ready.length){
+
+      time=ps[idx].arrival;
+      addArrivals();
+
+      continue;
+    }
+
+    let pos=0;
+
+    if(algo==="SJF")
+      pos=ready.reduce(
+        (best,p,i)=>
+          p.remaining<ready[best].remaining ||
+          (
+            p.remaining===ready[best].remaining &&
+            p.arrival<ready[best].arrival
+          )
+          ? i : best,
+        0
+      );
+
+    if(algo==="PRIORITY")
+      pos=ready.reduce(
+        (best,p,i)=>
+          p.priority<ready[best].priority ||
+          (
+            p.priority===ready[best].priority &&
+            p.arrival<ready[best].arrival
+          )
+          ? i : best,
+        0
+      );
+
+    const p=ready.splice(pos,1)[0];
+
+    if(p.first===null)
+      p.first=time;
+
+    let run=
+      algo==="RR"
+      ? Math.min(quantum,p.remaining)
+      : p.remaining;
+
+    const start=time;
+
+    time+=run;
+    p.remaining-=run;
+
+    timeline.push({
+      pid:p.pid,
+      start,
+      end:time
+    });
+
+    addArrivals();
+
+    if(p.remaining>0){
+      ready.push(p);
+    }else{
+      p.completion=time;
+      done++;
+    }
+
+  }
+
+  const metrics={};
+
+  ps.forEach(p=>{
+
+    metrics[p.pid]={
+      wait:p.completion-p.arrival-p.burst,
+      turn:p.completion-p.arrival,
+      resp:p.first-p.arrival
+    };
+
+  });
+
+  return {
+    timeline,
+    metrics,
+    finish:time
+  };
+
+}
+
+function mergeTimeline(t){
+
+  const out=[];
+
+  for(const s of t){
+
+    const last=out[out.length-1];
+
+    if(last && last.pid===s.pid)
+      last.end=s.end;
+    else
+      out.push({...s});
+
+  }
+
+  return out;
+
+}
+
+function renderGantt(t){
+
+  t=mergeTimeline(t);
+
+  if(!t.length){
+
+    if($("ganttAxis"))
+      $("ganttAxis").innerHTML="";
+
+    return "";
+
+  }
+
+  if($("ganttAxis")){
+
+    const marks=[
+      ...new Set([
+        t[0].start,
+        ...t.map(s=>s.end)
+      ])
+    ];
+
+    $("ganttAxis").innerHTML=
+      marks.map(x=>`<span>${x}</span>`).join("");
+
+  }
+
+  return t.map(s=>`
+
+    <div
+      class="gseg"
+      style="flex:${Math.max(.15,s.end-s.start)}"
+      title="${s.pid}: ${s.start} → ${s.end}">
+
+      <b>${s.pid}</b>
+      <small>${s.start}–${s.end}</small>
+
+    </div>
+
+  `).join("");
+
+}
+
+function schedulingAnalysis(algo,r){
+
+  const waits=
+    Object.values(r.metrics).map(x=>x.wait);
+
+  const turns=
+    Object.values(r.metrics).map(x=>x.turn);
+
+  const resps=
+    Object.values(r.metrics).map(x=>x.resp);
+
+  let text="";
+
+  if(algo==="FCFS")
+    text=
+      "FCFS is simple and starvation-free, but a long CPU-bound process can delay every process behind it (the convoy effect).";
+
+  if(algo==="SJF")
+    text=
+      "SJF favors short jobs and typically minimizes average waiting time when burst estimates are accurate, but long jobs may experience starvation.";
+
+  if(algo==="PRIORITY")
+    text=
+      "Priority scheduling gives urgent work earlier service. A low-priority process can wait for a long time; aging is a common mitigation.";
+
+  if(algo==="RR")
+    text=
+      "Round Robin allocates bounded CPU time to each ready process, improving responsiveness for interactive workloads. Quantum size controls the trade-off between responsiveness and context-switch overhead.";
+
+  $("schedAnalysis").innerHTML=`
+
+    <div class="alert good">
+
+      <b>${algo} completed.</b><br>
+
+      ${text}
+
+    </div>
+
+    <div
+      style="margin-top:12px;color:var(--muted);font-size:11px;line-height:1.65">
+
+      For this workload:
+
+      average waiting time is
+      <b style="color:var(--text)">
+        ${fmt(avg(waits))}
+      </b>,
+
+      average turnaround is
+      <b style="color:var(--text)">
+        ${fmt(avg(turns))}
+      </b>,
+
+      and average response is
+      <b style="color:var(--text)">
+        ${fmt(avg(resps))}
+      </b>.
+
+    </div>
+
+  `;
+
+}
+
+function drawBars(canvasId,rows){
+
+  const c=$(canvasId);
+  const ctx=c.getContext("2d");
+
+  const dpr=devicePixelRatio||1;
+  const w=c.clientWidth;
+  const h=c.clientHeight;
+
+  c.width=w*dpr;
+  c.height=h*dpr;
+
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+
+  const max=Math.max(
+    1,
+    ...rows.map(r=>Math.max(r.wait,r.turn))
+  );
+
+  const pad=28;
+  const bw=(w-pad*2)/rows.length*.55;
+
+  ctx.strokeStyle="#273044";
+  ctx.fillStyle="#7f8ba0";
+  ctx.font="9px system-ui";
+  ctx.textAlign="center";
+
+  for(let i=0;i<=4;i++){
+
+    let y=
+      h-pad-i*(h-pad*2)/4;
+
+    ctx.beginPath();
+    ctx.moveTo(pad,y);
+    ctx.lineTo(w-pad,y);
+    ctx.stroke();
+
+    ctx.fillText(
+      fmt(max*i/4),
+      pad/2,
+      y+3
+    );
+
+  }
+
+  rows.forEach((r,i)=>{
+
+    const x=
+      pad+(i+.5)*(w-pad*2)/rows.length;
+
+    const wh=
+      r.wait/max*(h-pad*2);
+
+    const th=
+      r.turn/max*(h-pad*2);
+
+    ctx.fillStyle="#6ea8fe";
+
+    ctx.fillRect(
+      x-bw/2,
+      h-pad-wh,
+      bw/2-2,
+      wh
+    );
+
+    ctx.fillStyle="#8b7cff";
+
+    ctx.fillRect(
+      x+2,
+      h-pad-th,
+      bw/2-2,
+      th
+    );
+
+    ctx.fillStyle="#9aa6b9";
+
+    ctx.fillText(
+      r.pid,
+      x,
+      h-10
+    );
+
+  });
+
+}
+
+function allocateMemory(){
+
+  const total=
+    Math.max(
+      128,
+      +$("memTotal").value||1024
+    );
+
+  const algo=$("memAlgo").value;
+
+  const req=
+    state.processes.map(p=>({
+      pid:p.pid,
+      size:p.memory
+    }));
+
+  let holes=[
+    {
+      start:0,
+      size:total
+    }
+  ];
+
+  let allocations=[];
+
+  for(const p of req){
+
+    let candidates=
+      holes
+      .map((h,i)=>({
+        ...h,
+        index:i
+      }))
+      .filter(h=>h.size>=p.size);
+
+    if(!candidates.length){
+
+      allocations.push({
+        pid:p.pid,
+        size:p.size,
+        status:"FAILED"
+      });
+
+      continue;
+
+    }
+
+    let chosen=candidates[0];
+
+    if(algo==="BEST")
+      chosen=candidates.reduce(
+        (a,b)=>b.size<a.size?b:a
+      );
+
+    if(algo==="WORST")
+      chosen=candidates.reduce(
+        (a,b)=>b.size>a.size?b:a
+      );
+
+    allocations.push({
+      pid:p.pid,
+      size:p.size,
+      start:chosen.start,
+      status:"ALLOCATED"
+    });
+
+    const i=chosen.index;
+
+    holes.splice(i,1);
+
+    if(chosen.size>p.size){
+
+      holes.splice(
+        i,
+        0,
+        {
+          start:chosen.start+p.size,
+          size:chosen.size-p.size
+        }
+      );
+
+    }
+
+  }
+
+  const blocks=
+    allocations
+    .filter(x=>x.status==="ALLOCATED")
+    .map(a=>({...a,type:"p"}));
+
+  holes.forEach(h=>
+    blocks.push({
+      ...h,
+      type:"free"
+    })
+  );
+
+  blocks.sort((a,b)=>a.start-b.start);
+
+  $("memoryMap").innerHTML=
+    blocks.map(b=>`
+
+      <div
+        class="mem-block ${b.type==="free"?"mem-free":"mem-p"}"
+        style="width:${b.size/total*100}%">
+
+        ${
+          b.type==="free"
+          ? `FREE ${b.size}`
+          : `${b.pid} ${b.size}MB`
+        }
+
+      </div>
+
+    `).join("");
+
+  $("memTable").innerHTML=
+    allocations.map(a=>`
+
+      <tr>
+
+        <td><b>${a.pid}</b></td>
+
+        <td>${a.size} MB</td>
+
+        <td>
+          ${
+            a.status==="ALLOCATED"
+            ? a.size+" MB"
+            : "—"
+          }
+        </td>
+
+        <td>
+          ${
+            a.status==="ALLOCATED"
+            ? a.start+" MB"
+            : "—"
+          }
+        </td>
+
+        <td>
+
+          <span class="badge ${
+            a.status==="ALLOCATED"
+            ? "good"
+            : "danger"
+          }">
+
+            ${a.status}
+
+          </span>
+
+        </td>
+
+      </tr>
+
+    `).join("");
+
+  const used=
+    allocations
+      .filter(a=>a.status==="ALLOCATED")
+      .reduce((s,a)=>s+a.size,0);
+
+  const free=
+    holes.reduce((s,h)=>s+h.size,0);
+
+  const largest=
+    Math.max(
+      0,
+      ...holes.map(h=>h.size)
+    );
+
+  const frag=
+    free
+    ? ((free-largest)/free*100)
+    : 0;
+
+  $("memUsed").textContent=
+    `${fmt(used)} MB (${fmt(used/total*100)}%)`;
+
+  $("memFree").textContent=
+    `${fmt(largest)} MB`;
+
+  $("memFrag").textContent=
+    `${fmt(frag)}%`;
+
+  let note;
+  if(holes.length===1){
+    note =
+      "Only one contiguous free block remains, so First Fit, Best Fit and Worst Fit make the same placement for this workload.";
+  }else{
+    note=
+      algo==="FIRST"
+      ? "First Fit stops at the first sufficiently large hole, generally reducing search overhead."
+      : algo==="BEST"
+      ? "Best Fit selects the smallest sufficient hole, potentially reducing leftover size but often creating many tiny fragments."
+      : "Worst Fit consumes the largest available hole, attempting to leave medium-sized holes for future requests.";
+  }
+
+  $("memAnalysis").innerHTML=`
+
+    <div class="alert good">
+
+      <b>
+        ${
+          algo==="FIRST"
+          ? "First Fit"
+          : algo==="BEST"
+          ? "Best Fit"
+          : "Worst Fit"
+        }
+      </b>
+
+      <br>
+
+      ${note}
+
+    </div>
+
+    <div
+      style="margin-top:12px;color:var(--muted);font-size:11px;line-height:1.7">
+
+      Allocated
+      <b style="color:var(--text)">
+        ${used} MB
+      </b>
+
+      of ${total} MB.
+
+      Total free memory is
+      <b style="color:var(--text)">
+        ${free} MB
+      </b>;
+
+      the largest contiguous free block is
+      <b style="color:var(--text)">
+        ${largest} MB
+      </b>.
+
+    </div>
+
+  `;
+
+}
+
+function deadlockData(){
+  return state.resources;
+}
+
+function bankers(data){
+
+  const n=data.allocation.length;
+  const m=data.available.length;
+
+  const need=
+    data.maximum.map(
+      (row,i)=>
+        row.map(
+          (v,j)=>
+            v-data.allocation[i][j]
+        )
+    );
+
+  if(
+    need.some(
+      row=>row.some(v=>v<0)
+    )
+  ){
+
+    return {
+      safe:false,
+      need,
+      seq:[],
+      work:[...data.available],
+      invalid:true,
+      trace:[]
+    };
+
+  }
+
+  let work=[...data.available];
+
+  let finish=
+    Array(n).fill(false);
+
+  let seq=[];
+  let trace=[];
+
+  let changed=true;
+
+  while(changed){
+
+    changed=false;
+
+    for(let i=0;i<n;i++){
+
+      if(finish[i])
+        continue;
+
+      if(
+        need[i].every(
+          (v,j)=>v<=work[j]
+        )
+      ){
+
+        const before=[...work];
+
+        work=
+          work.map(
+            (v,j)=>
+              v+data.allocation[i][j]
+          );
+
+        finish[i]=true;
+        seq.push(i);
+        changed=true;
+
+        trace.push({
+          pid:"P"+(i+1),
+          before,
+          need:[...need[i]],
+          after:[...work]
+        });
+
+      }
+
+    }
+
+  }
+
+  return {
+    safe:finish.every(Boolean),
+    need,
+    seq,
+    work,
+    trace,
+    invalid:false
+  };
+
+}
+
+function renderResources(){
+
+  const d=deadlockData();
+  const b=bankers(d);
+
+  $("resourceTable").innerHTML=
+    d.allocation.map((a,i)=>`
+
+      <tr>
+
+        <td>
+          <b>P${i+1}</b>
+        </td>
+
+        <td>
+
+          ${a.map((v,j)=>`
+
+            <input
+              class="matrix-input alloc-input"
+              data-i="${i}"
+              data-j="${j}"
+              type="number"
+              min="0"
+              value="${v}">
+
+          `).join(" ")}
+
+        </td>
+
+        <td>
+
+          ${d.maximum[i].map((v,j)=>`
+
+            <input
+              class="matrix-input max-input"
+              data-i="${i}"
+              data-j="${j}"
+              type="number"
+              min="0"
+              value="${v}">
+
+          `).join(" ")}
+
+        </td>
+
+        <td>
+          [${b.need?.[i]?.join(", ") ?? "—"}]
+        </td>
+
+        <td>
+          [${d.available.join(", ")}]
+        </td>
+
+      </tr>
+
+    `).join("");
+
+  document
+    .querySelectorAll(".alloc-input,.max-input")
+    .forEach(inp=>{
+
+      inp.addEventListener("change",()=>{
+
+        const i=+inp.dataset.i;
+        const j=+inp.dataset.j;
+        const v=Math.max(0,+inp.value||0);
+
+        if(
+          inp.classList.contains("alloc-input")
+        )
+          d.allocation[i][j]=v;
+        else
+          d.maximum[i][j]=v;
+
+        renderResources();
+        renderRAG();
+
+        $("bankerResult").innerHTML=
+          '<div class="empty">Allocation changed. Run the safety check again.</div>';
+
+      });
+
+    });
+
+}
+
+function hasRequestCycle(data){
+
+  const n=data.allocation.length;
+  const m=data.available.length;
+  const graph=Array.from({length:n+m},()=>[]);
+
+  for(let i=0;i<n;i++){
+    for(let j=0;j<m;j++){
+      if((data.allocation[i]?.[j]||0)>0)
+        graph[n+j].push(i);       // Rj -> Pi
+      if((data.request?.[i]?.[j]||0)>0)
+        graph[i].push(n+j);       // Pi -> Rj
+    }
+  }
+
+  const visiting=new Set();
+  const visited=new Set();
+
+  const dfs=(u)=>{
+    if(visiting.has(u)) return true;
+    if(visited.has(u)) return false;
+    visiting.add(u);
+    for(const v of graph[u]){
+      if(dfs(v)) return true;
+    }
+    visiting.delete(u);
+    visited.add(u);
+    return false;
+  };
+
+  for(let i=0;i<graph.length;i++){
+    if(dfs(i)) return true;
+  }
+  return false;
+}
+
+function renderRAG(){
+
+  const d=deadlockData();
+  const b=bankers(d);
+  const cycle=hasRequestCycle(d);
+
+  const p=[
+    {x:18,y:28},
+    {x:50,y:16},
+    {x:82,y:28}
+  ];
+
+  const r=[
+    {x:18,y:76},
+    {x:50,y:76},
+    {x:82,y:76}
+  ];
+
+  let svg=`
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+      <defs>
+        <marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+          <path d="M0,0 L7,3.5 L0,7 z" fill="currentColor"/>
+        </marker>
+      </defs>
+  `;
+
+  p.forEach((n,i)=>{
+    svg+=`
+      <circle class="node-p" cx="${n.x}" cy="${n.y}" r="7"/>
+      <text class="node-label" x="${n.x}" y="${n.y}">P${i+1}</text>
+    `;
+  });
+
+  r.forEach((n,i)=>{
+    svg+=`
+      <rect class="node-r" x="${n.x-5}" y="${n.y-5}" width="10" height="10" rx="2"/>
+      <text class="node-label" x="${n.x}" y="${n.y}">R${i+1}</text>
+    `;
+  });
+
+  // Allocation edges: Resource -> Process.
+  for(let i=0;i<d.allocation.length;i++){
+    for(let j=0;j<r.length;j++){
+      if((d.allocation[i]?.[j]||0)>0){
+        const a=r[j], z=p[i];
+        svg+=`<path class="edge" d="M${a.x},${a.y-7} L${z.x},${z.y+7}" marker-end="url(#arrow)"/>`;
+      }
+    }
+  }
+
+  // Current outstanding requests: Process -> Resource.
+  for(let i=0;i<(d.request||[]).length;i++){
+    for(let j=0;j<r.length;j++){
+      if((d.request[i]?.[j]||0)>0){
+        const a=p[i], z=r[j];
+        svg+=`<path class="edge ${cycle?"edge-danger":""}" d="M${a.x},${a.y+7} L${z.x},${z.y-7}" marker-end="url(#arrow)"/>`;
+      }
+    }
+  }
+
+  svg+=`</svg>`;
+  $("rag").innerHTML=svg;
+
+  $("deadAlert").className=`alert ${cycle?"danger":(b.safe?"good":"warn")}`;
+  $("deadAlert").innerHTML=cycle
+    ? `<b>⚠ DEADLOCK DETECTED</b><br>A circular wait exists in the current resource-allocation graph.`
+    : b.safe
+      ? `<b>✓ SAFE STATE</b><br>No circular wait is present, and Banker’s algorithm found a valid safe sequence.`
+      : `<b>⚠ UNSAFE STATE</b><br>Banker’s algorithm found no complete safe sequence; no circular wait is currently shown in the graph.`;
+
+  $("dState").textContent=b.safe ? "SAFE" : "UNSAFE";
+
+}
+function runBanker(){
+
+  const b=bankers(deadlockData());
+
+  if(b.invalid){
+
+    $("bankerResult").innerHTML=`
+
+      <div class="alert danger">
+
+        <b>INVALID STATE</b><br>
+
+        Maximum demand cannot be smaller
+        than current allocation.
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+  if(b.safe){
+
+    const steps=
+      b.trace.map((t,i)=>`
+
+        <tr>
+
+          <td>${i+1}</td>
+          <td><b>${t.pid}</b></td>
+          <td>[${t.need.join(", ")}]</td>
+          <td>[${t.before.join(", ")}]</td>
+          <td>[${t.after.join(", ")}]</td>
+
+        </tr>
+
+      `).join("");
+
+    $("bankerResult").innerHTML=`
+
+      <div class="alert good">
+
+        <b>✓ SAFE STATE</b><br>
+
+        Safe sequence:
+
+        <b>
+          ${b.seq.map(i=>"P"+(i+1)).join(" → ")}
+        </b>
+
+      </div>
+
+      <div class="table-wrap" style="margin-top:12px">
+
+        <table class="table">
+
+          <thead>
+
+            <tr>
+              <th>#</th>
+              <th>Process</th>
+              <th>Need</th>
+              <th>Work Before</th>
+              <th>Work After</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+            ${steps}
+          </tbody>
+
+        </table>
+
+      </div>
+
+    `;
+
+  }else{
+
+    const blocked=
+      b.need
+      .map((need,i)=>({
+        pid:"P"+(i+1),
+        need
+      }))
+      .filter(
+        x=>!x.need.every(
+          (v,j)=>v<=b.work[j]
+        )
+      );
+
+    $("bankerResult").innerHTML=`
+
+      <div class="alert danger">
+
+        <b>⚠ UNSAFE STATE</b><br>
+
+        No complete safe sequence exists. This does not by itself prove a deadlock.
+
+      </div>
+
+      <div
+        style="margin-top:12px;color:var(--muted);font-size:11px;line-height:1.7">
+
+        <b style="color:var(--text)">
+          Blocked candidates:
+        </b>
+
+        ${
+          blocked
+          .map(
+            x=>x.pid+
+            " need ["+
+            x.need.join(", ")+
+            "]"
+          )
+          .join(" · ")
+          || "none"
+        }
+
+        <br><br>
+
+        The safety test could not find another process
+        whose remaining Need can be satisfied by the
+        current Work vector.
+
+      </div>
+
+    `;
+
+  }
+
+}
+
+function loadDeadDemo(){
+
+  state.resources={
+    allocation:[
+      [1,0,0],
+      [0,1,0],
+      [0,0,1]
+    ],
+
+    maximum:[
+      [1,1,0],
+      [0,1,1],
+      [1,0,1]
+    ],
+
+    available:[
+      0,0,0
+    ],
+    request:[
+      [0,1,0],
+      [0,0,1],
+      [1,0,0]
+    ]
+  };
+
+  renderResources();
+  renderRAG();
+  runBanker();
+
+  toast("Deadlock scenario loaded");
+
+}
+
+function loadSafeDemo(){
+
+  state.resources={
+    allocation:[
+      [0,1,0],
+      [2,0,0],
+      [0,0,1]
+    ],
+
+    maximum:[
+      [1,1,0],
+      [2,1,1],
+      [1,0,1]
+    ],
+
+    available:[
+      1,0,0
+    ],
+    request:[
+      [0,0,0],
+      [0,0,0],
+      [0,0,0]
+    ]
+  };
+
+  renderResources();
+  renderRAG();
+  runBanker();
+
+  toast("Safe scenario loaded");
+
+}
+
+function diskSchedule(algo,q,head,size){
+
+  q=q
+    .filter(n=>Number.isFinite(n))
+    .map(Number);
+
+  let order=[];
+  let cur=head;
+  let remaining=[...q];
+
+  const add=n=>{
+    order.push(n);
+    cur=n;
+  };
+
+  if(algo==="FCFS")
+    q.forEach(add);
+
+  if(algo==="SSTF"){
+
+    while(remaining.length){
+
+      let i=
+        remaining.reduce(
+          (b,x,j)=>
+            Math.abs(x-cur)<
+            Math.abs(remaining[b]-cur)
+            ? j
+            : b,
+          0
+        );
+
+      add(
+        remaining.splice(i,1)[0]
+      );
+
+    }
+
+  }
+
+  const sorted=
+    [...q].sort((a,b)=>a-b);
+
+  if(
+    ["SCAN","CSCAN","LOOK","CLOOK"]
+      .includes(algo)
+  ){
+
+    const left=
+      sorted.filter(x=>x<head);
+
+    const right=
+      sorted.filter(x=>x>=head);
+
+    if(algo==="SCAN"){
+
+      right.forEach(add);
+      add(size-1);
+      left.reverse().forEach(add);
+
+    }
+
+    if(algo==="CSCAN"){
+
+      right.forEach(add);
+      add(size-1);
+      add(0);
+      left.forEach(add);
+
+    }
+
+    if(algo==="LOOK"){
+
+      right.forEach(add);
+      left.reverse().forEach(add);
+
+    }
+
+    if(algo==="CLOOK"){
+
+      right.forEach(add);
+
+      if(left.length){
+
+        add(left[0]);
+
+        left
+          .slice(1)
+          .forEach(add);
+
+      }
+
+    }
+
+  }
+
+  const path=[
+    head,
+    ...order
+  ];
+
+  const move=
+    path
+      .slice(1)
+      .reduce(
+        (s,x,i)=>
+          s+Math.abs(x-path[i]),
+        0
+      );
+
+  return {
+    order,
+    path,
+    move
+  };
+
+}
+
+function runDisk(){
+
+  const q =
+    $("diskQueue")
+      .value
+      .split(",")
+      .map(v => Number(v.trim()))
+      .filter(Number.isFinite);
+
+  const head =
+    Number($("diskHead").value);
+
+  const size =
+    Number($("diskSize").value);
+
+  const algo =
+    $("diskAlgo").value;
+
+  /*
+   * Configure the new Disk Scheduling subsystem.
+   */
+  const config =
+    DiskAPI.configure(
+      size,
+      head,
+      "right"
+    );
+
+  if(!config.success){
+
+    $("diskAnalysis").innerHTML = `
+      <div class="alert bad">
+        <b>Configuration Error</b><br>
+        ${config.error}
+      </div>
+    `;
+
+    return;
+  }
+
+
+  /*
+   * Load request queue.
+   */
+  const requestResult =
+    DiskAPI.requests(q);
+
+  if(!requestResult.success){
+
+    $("diskAnalysis").innerHTML = `
+      <div class="alert bad">
+        <b>Request Error</b><br>
+        ${requestResult.error}
+      </div>
+    `;
+
+    return;
+  }
+
+
+  /*
+   * Run selected algorithm.
+   */
+  const r =
+    DiskAPI.run(algo);
+
+
+  if(!r || r.success === false){
+
+    $("diskAnalysis").innerHTML = `
+      <div class="alert bad">
+        <b>Scheduler Error</b><br>
+        ${r?.error || "Unable to run disk scheduler."}
+      </div>
+    `;
+
+    return;
+  }
+
+
+  /*
+   * ----------------------------------------------------------
+   * TIMELINE
+   * ----------------------------------------------------------
+   */
+
+  $("diskTimeline").innerHTML =
+    r.serviceSequence
+      .map((track, i) => {
+
+        const previous =
+          i === 0
+            ? r.initialHead
+            : r.serviceSequence[i - 1];
+
+        const movement =
+          Math.abs(
+            track - previous
+          );
+
+        return `
+
+          <div
+            class="gseg"
+            style="flex:1">
+
+            <b>${track}</b>
+
+            <small>
+              ${
+                i === 0
+                  ? `HEAD ${r.initialHead} → ${track}`
+                  : movement
+              }
+            </small>
+
+          </div>
+
+        `;
+
+      })
+      .join("");
+
+
+  /*
+   * ----------------------------------------------------------
+   * METRICS
+   * ----------------------------------------------------------
+   */
+
+  $("headMove").textContent =
+    r.totalMovement;
+
+  $("diskAvg").textContent =
+    r.averageMovement;
+
+  $("diskCount").textContent =
+    r.requestCount;
+
+
+  /*
+   * ----------------------------------------------------------
+   * SERVICE PATH
+   * ----------------------------------------------------------
+   */
+
+  $("diskPath").innerHTML = `
+
+    <div class="codebox">
+
+      ${r.initialHead}
+      →
+      ${r.serviceSequence.join("  →  ")}
+
+    </div>
+
+  `;
+
+
+  /*
+   * ----------------------------------------------------------
+   * ALGORITHM ANALYSIS
+   * ----------------------------------------------------------
+   */
+
+  const msg = {
+
+    FCFS:
+      "FCFS serves disk requests in their arrival order. It is simple and fair in ordering, but may produce large head movements.",
+
+    SSTF:
+      "SSTF selects the closest pending request. It usually reduces total seek distance, but distant requests may experience starvation.",
+
+    SCAN:
+      "SCAN moves the disk head in one direction until the end of the disk and then reverses, providing predictable service.",
+
+    "C-SCAN":
+      "C-SCAN services requests in one direction and then returns to the beginning, providing more uniform waiting time.",
+
+    LOOK:
+      "LOOK behaves like SCAN but reverses at the last pending request instead of travelling unnecessarily to the physical disk boundary.",
+
+    "C-LOOK":
+      "C-LOOK behaves like C-SCAN but jumps between the last request in one direction and the first request in the other direction."
+    
+  }[r.algorithm] || "";
+
+
+  $("diskAnalysis").innerHTML = `
+
+    <div class="alert good">
+
+      <b>${r.algorithm}</b><br>
+
+      ${msg}
+
+    </div>
+
+    <div
+      style="
+        margin-top:12px;
+        color:var(--muted);
+        font-size:11px;
+        line-height:1.7">
+
+      The selected policy moved the disk head
+
+      <b style="color:var(--text)">
+        ${r.totalMovement}
+      </b>
+
+      cylinders to serve
+
+      <b style="color:var(--text)">
+        ${r.requestCount}
+      </b>
+
+      requests.
+
+      <br>
+
+      Average movement:
+
+      <b style="color:var(--text)">
+        ${r.averageMovement}
+      </b>
+
+      cylinders/request.
+
+      <br>
+
+      Initial head:
+
+      <b style="color:var(--text)">
+        ${r.initialHead}
+      </b>
+
+      &nbsp;→&nbsp;
+
+      Final head:
+
+      <b style="color:var(--text)">
+        ${r.finalHead}
+      </b>
+
+    </div>
+
+  `;
+
+
+  /*
+   * ----------------------------------------------------------
+   * LOG
+   * ----------------------------------------------------------
+   */
+
+  if(typeof addLog === "function"){
+
+    addLog(
+      "INFO",
+      `Disk ${r.algorithm}: ${r.totalMovement} cylinders, ${r.requestCount} requests.`
+    );
+
+  }
+
+}
+
+function compareDiskAlgorithms(){
+
+  const q =
+    $("diskQueue")
+      .value
+      .split(",")
+      .map(v => Number(v.trim()))
+      .filter(Number.isFinite);
+
+  const head =
+    Number($("diskHead").value);
+
+  const size =
+    Number($("diskSize").value);
+
+
+  const config =
+    DiskAPI.configure(
+      size,
+      head,
+      "right"
+    );
+
+  if(!config.success){
+
+    $("diskAnalysis").innerHTML = `
+      <div class="alert bad">
+        ${config.error}
+      </div>
+    `;
+
+    return;
+  }
+
+
+  DiskAPI.requests(q);
+
+
+  const comparison =
+    DiskAPI.compare();
+
+
+  if(!comparison || !comparison.ranking){
+
+    $("diskAnalysis").innerHTML = `
+      <div class="alert bad">
+        Unable to compare algorithms.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  const rows =
+    comparison.ranking
+      .map(row => `
+
+        <tr>
+
+          <td>
+            <b>#${row.rank}</b>
+          </td>
+
+          <td>
+            <b>${row.algorithm}</b>
+          </td>
+
+          <td>
+            ${row.totalMovement}
+          </td>
+
+          <td>
+            ${row.averageMovement}
+          </td>
+
+        </tr>
+
+      `)
+      .join("");
+
+
+  const best =
+    comparison.best;
+
+
+  $("diskAnalysis").innerHTML = `
+
+    <div class="alert good">
+
+      <b>Algorithm Comparison</b><br>
+
+      Best performer:
+
+      <strong>
+        ${best.algorithm}
+      </strong>
+
+      with
+
+      <strong>
+        ${best.totalMovement}
+      </strong>
+
+      cylinders of total head movement.
+
+    </div>
+
+
+    <div
+      style="
+        margin-top:15px;
+        overflow-x:auto">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>Rank</th>
+            <th>Algorithm</th>
+            <th>Total Movement</th>
+            <th>Average</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          ${rows}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  `;
+
+
+  /*
+   * Show best algorithm in the
+   * main metric area.
+   */
+
+  $("headMove").textContent =
+    best.totalMovement;
+
+  $("diskAvg").textContent =
+    best.averageMovement;
+
+  $("diskCount").textContent =
+    q.length;
+
+
+  /*
+   * Show best service path.
+   */
+
+  const bestResult =
+    comparison.results.find(
+      result =>
+        result.algorithm ===
+        best.algorithm
+    );
+
+
+  if(bestResult){
+
+    $("diskPath").innerHTML = `
+
+      <div class="codebox">
+
+        ${bestResult.initialHead}
+        →
+        ${bestResult.serviceSequence.join(
+          "  →  "
+        )}
+
+      </div>
+
+    `;
+  }
+
+
+  if(typeof addLog === "function"){
+
+    addLog(
+      "INFO",
+      `Disk comparison: ${best.algorithm} is best with ${best.totalMovement} cylinders.`
+    );
+
+  }
+
+}
+
+function runExperiment(){
+
+  /*
+   * ==========================================================
+   * OS-SimX — FULL SYSTEM BENCHMARK
+   * CPU + MEMORY + DEADLOCK + DISK
+   * ==========================================================
+   */
+
+  const benchmark = {
+    timestamp: new Date().toISOString(),
+    cpu: [],
+    memory: [],
+    deadlock: null,
+    disk: []
+  };
+
+
+  /* ==========================================================
+     1. CPU SCHEDULING BENCHMARK
+     ========================================================== */
+
+  const cpuAlgorithms = [
+    "FCFS",
+    "SJF",
+    "PRIORITY",
+    "RR"
+  ];
+
+  for(const algo of cpuAlgorithms){
+
+    const r =
+      simulate(
+        algo,
+        2,
+        state.processes
+      );
+
+    const metrics =
+      Object.values(r.metrics);
+
+    benchmark.cpu.push({
+
+      algo,
+
+      wait:
+        avg(
+          metrics.map(
+            x => x.wait
+          )
+        ),
+
+      turn:
+        avg(
+          metrics.map(
+            x => x.turn
+          )
+        ),
+
+      resp:
+        avg(
+          metrics.map(
+            x => x.resp
+          )
+        )
+
+    });
+
+  }
+
+
+  /* ==========================================================
+     2. MEMORY ALLOCATION BENCHMARK
+     ========================================================== */
+
+  const memoryAlgorithms = [
+    "first-fit",
+    "best-fit",
+    "worst-fit"
+  ];
+
+  const memorySetup = [
+    ["A",200],
+    ["B",300],
+    ["C",150],
+    ["D",100]
+  ];
+
+  const memoryRequests = [
+    ["X",120],
+    ["Y",180]
+  ];
+
+
+  for(const algorithm of memoryAlgorithms){
+
+    // Start every policy from the identical fragmented memory state.
+    MemoryAPI.reset();
+
+    for(const [name,size] of memorySetup){
+      MemoryAPI.allocate(name,size,"first-fit");
+    }
+
+    // Create holes of 300 MB and 100 MB before comparing policies.
+    MemoryAPI.free("B");
+    MemoryAPI.free("D");
+
+    const started =
+      performance.now();
+
+    let successful = 0;
+    let failed = 0;
+
+    for(const [name,size] of memoryRequests){
+      try{
+        const result=MemoryAPI.allocate(name,size,algorithm);
+        if(result && result.success===false) failed++;
+        else successful++;
+      }catch(e){
+        failed++;
+      }
+    }
+
+
+    const elapsed =
+      performance.now() - started;
+
+
+    const stats =
+      MemoryAPI.stats();
+
+
+    benchmark.memory.push({
+
+      algorithm,
+
+      successful,
+
+      failed,
+
+      used:
+        stats.used,
+
+      free:
+        stats.free,
+
+      utilization:
+        stats.utilization,
+
+      fragmentation:
+        stats.fragmentation,
+
+      largestFree:
+        stats.largestFree,
+
+      time:
+        Number(elapsed.toFixed(3))
+
+    });
+
+
+    // Leave the manager clean for the next benchmark iteration.
+    MemoryAPI.reset();
+
+  }
+
+
+  /* ==========================================================
+     3. DEADLOCK / BANKER'S SAFETY BENCHMARK
+     ========================================================== */
+
+  let deadlockResult = null;
+
+
+  try{
+
+    DeadlockAPI.reset();
+
+
+    DeadlockAPI.createResource(
+      "R1",
+      "Printer",
+      3
+    );
+
+    DeadlockAPI.createResource(
+      "R2",
+      "Disk",
+      2
+    );
+
+    const pids =
+      state.processes
+        .slice(0, 3)
+        .map(
+          p => Number(p.pid)
+        );
+
+
+    for(const pid of pids){
+
+      DeadlockAPI.registerProcess(
+        pid
+      );
+
+      DeadlockAPI.setMaximum(
+        pid,
+        "R1",
+        1
+      );
+
+      DeadlockAPI.setMaximum(
+        pid,
+        "R2",
+        1
+      );
+
+    }
+
+
+    const started =
+      performance.now();
+
+
+    deadlockResult =
+      DeadlockAPI.safety();
+
+
+    const elapsed =
+      performance.now() - started;
+
+
+    benchmark.deadlock = {
+
+      safe:
+        Boolean(
+          deadlockResult?.safe
+        ),
+
+      sequence:
+        deadlockResult?.safeSequence
+        || deadlockResult?.sequence
+        || [],
+
+      time:
+        Number(
+          elapsed.toFixed(3)
+        )
+
+    };
+
+  }
+  catch(error){
+
+    benchmark.deadlock = {
+
+      safe: false,
+
+      sequence: [],
+
+      time: 0,
+
+      error:
+        error.message
+
+    };
+
+  }
+
+
+  /* ==========================================================
+     4. DISK SCHEDULING BENCHMARK
+     ========================================================== */
+
+  const diskQueue = [
+    98,
+    183,
+    37,
+    122,
+    14,
+    124,
+    65,
+    67
+  ];
+
+  const diskAlgorithms = [
+    "FCFS",
+    "SSTF",
+    "SCAN",
+    "C-SCAN",
+    "LOOK",
+    "C-LOOK"
+  ];
+
+
+  try{
+
+    DiskAPI.configure(
+      200,
+      53,
+      "right"
+    );
+
+    DiskAPI.requests(
+      diskQueue
+    );
+
+
+    for(
+      const algo
+      of diskAlgorithms
+    ){
+
+      const result =
+        DiskAPI.run(algo);
+
+
+      if(
+        result &&
+        result.success !== false
+      ){
+
+        benchmark.disk.push({
+
+          algo,
+
+          movement:
+            result.totalMovement,
+
+          average:
+            result.averageMovement,
+
+          requests:
+            result.requestCount
+
+        });
+
+      }
+
+    }
+
+  }
+  catch(error){
+
+    console.error(
+      "Disk benchmark failed:",
+      error
+    );
+
+  }
+
+
+  /* ==========================================================
+     SAVE RESULTS
+     ========================================================== */
+
+  state.lastExperiment =
+    benchmark;
+
+
+  /* ==========================================================
+     CPU TABLE
+     ========================================================== */
+
+  $("expTable").innerHTML =
+
+    benchmark.cpu
+      .map(r => `
+
+        <tr>
+
+          <td>
+            <b>${r.algo}</b>
+          </td>
+
+          <td>
+            ${fmt(r.wait)}
+          </td>
+
+          <td>
+            ${fmt(r.turn)}
+          </td>
+
+          <td>
+            ${fmt(r.resp)}
+          </td>
+
+          <td>
+
+            ${
+              r.algo === "SJF"
+                ? "Strong waiting-time performance"
+                : r.algo === "RR"
+                ? "Strong interactive responsiveness"
+                : r.algo === "PRIORITY"
+                ? "Useful for priority-driven workloads"
+                : "Simple baseline scheduling policy"
+            }
+
+          </td>
+
+        </tr>
+
+      `)
+      .join("");
+
+
+  /* ==========================================================
+     CPU WINNERS
+     ========================================================== */
+
+  const bestWait =
+    benchmark.cpu.reduce(
+      (a,b) =>
+        a.wait < b.wait
+          ? a
+          : b
+    );
+
+
+  const bestResp =
+    benchmark.cpu.reduce(
+      (a,b) =>
+        a.resp < b.resp
+          ? a
+          : b
+    );
+
+
+  /* ==========================================================
+     MEMORY WINNER
+     ========================================================== */
+
+  const bestMemory =
+    benchmark.memory.length
+      ? benchmark.memory.reduce(
+          (a,b) =>
+            a.fragmentation < b.fragmentation
+              ? a
+              : b
+        )
+      : null;
+
+  const minFragmentation = bestMemory
+    ? Math.min(...benchmark.memory.map(r=>r.fragmentation))
+    : null;
+
+  const memoryWinners = benchmark.memory.filter(
+    r => minFragmentation !== null &&
+         Math.abs(r.fragmentation-minFragmentation)<1e-9
+  );
+
+  const memoryTie = memoryWinners.length>1;
+
+
+  /* ==========================================================
+     DISK WINNER
+     ========================================================== */
+
+  const bestDisk =
+    benchmark.disk.length
+      ? benchmark.disk.reduce(
+          (a,b) =>
+            a.movement <
+            b.movement
+              ? a
+              : b
+        )
+      : null;
+
+
+  /* ==========================================================
+     DASHBOARD CARDS
+     ========================================================== */
+
+  $("bestWait").textContent =
+    bestWait.algo;
+
+
+  $("bestResp").textContent =
+    bestResp.algo;
+
+
+  $("recommended").textContent =
+    bestResp.algo;
+
+
+  /* ==========================================================
+     FULL SYSTEM ANALYSIS
+     ========================================================== */
+
+  const memoryText =
+    bestMemory
+      ? (memoryTie
+          ? `${memoryWinners.map(r=>r.algorithm).join(", ")} (${fmt(bestMemory.fragmentation)}% fragmentation)`
+          : `${bestMemory.algorithm} (${fmt(bestMemory.fragmentation)}% fragmentation)`)
+      : "N/A";
+
+
+  const diskText =
+    bestDisk
+      ? `${bestDisk.algo} (${bestDisk.movement} cylinders)`
+      : "N/A";
+
+
+  const safetyText =
+    benchmark.deadlock
+      ? benchmark.deadlock.safe
+        ? "SAFE"
+        : "UNSAFE"
+      : "N/A";
+
+
+  $("expAnalysis").innerHTML = `
+
+    <div class="alert good">
+
+      <b>System Benchmark Complete</b><br>
+
+      The same experimental environment was evaluated
+      across CPU scheduling, memory allocation,
+      deadlock safety and disk scheduling.
+
+    </div>
+
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:
+          repeat(auto-fit,minmax(190px,1fr));
+        gap:10px;
+        margin-top:14px">
+
+      <div class="card">
+
+        <div class="metric-label">
+          CPU — Best Waiting
+        </div>
+
+        <div class="metric"
+             style="font-size:20px">
+
+          ${bestWait.algo}
+
+        </div>
+
+        <div class="metric-sub">
+
+          ${fmt(bestWait.wait)} time units
+
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="metric-label">
+          CPU — Best Response
+        </div>
+
+        <div class="metric"
+             style="font-size:20px">
+
+          ${bestResp.algo}
+
+        </div>
+
+        <div class="metric-sub">
+
+          ${fmt(bestResp.resp)} time units
+
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="metric-label">
+          Memory — Lowest Fragmentation
+        </div>
+
+        <div class="metric"
+             style="font-size:20px">
+
+          ${
+            bestMemory
+              ? (memoryTie
+                  ? "Tie"
+                  : bestMemory.algorithm)
+              : "N/A"
+          }
+
+        </div>
+
+        <div class="metric-sub">
+
+          ${memoryText}
+
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="metric-label">
+          Disk — Lowest Movement
+        </div>
+
+        <div class="metric"
+             style="font-size:20px">
+
+          ${
+            bestDisk
+              ? bestDisk.algo
+              : "N/A"
+          }
+
+        </div>
+
+        <div class="metric-sub">
+
+          ${diskText}
+
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="metric-label">
+          Banker Safety
+        </div>
+
+        <div class="metric"
+             style="font-size:20px">
+
+          ${safetyText}
+
+        </div>
+
+        <div class="metric-sub">
+
+          ${
+            benchmark.deadlock?.time ?? 0
+          } ms analysis
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      style="
+        margin-top:15px;
+        color:var(--muted);
+        font-size:12px;
+        line-height:1.8">
+
+      <b style="color:var(--text)">
+        Design Judgment
+      </b>
+
+      <br>
+
+      No single OS policy is universally optimal.
+      CPU scheduling should prioritize workload goals
+      such as responsiveness or waiting time.
+
+      Memory allocation should consider fragmentation
+      and allocation success. The benchmark intentionally
+      starts from the same fragmented state for every policy.
+
+      Disk scheduling should minimize head movement
+      while maintaining acceptable service behavior.
+
+      Banker’s algorithm provides a safety guarantee
+      before resource allocation proceeds.
+
+    </div>
+
+  `;
+
+
+  /* ==========================================================
+     CONSOLE / LOG
+     ========================================================== */
+
+  if(typeof addLog === "function"){
+
+    addLog(
+      "INFO",
+      `Full benchmark completed: CPU ${benchmark.cpu.length} algorithms, Memory ${benchmark.memory.length} algorithms, Disk ${benchmark.disk.length} algorithms.`
+    );
+
+  }
+
+
+  return benchmark;
+
+}
+
+function exportResults(){
+
+  if(!state.lastExperiment)
+    runExperiment();
+
+  const text=
+    "OS-SimX Benchmark Results\n\n"+
+    state.lastExperiment
+      .map(
+        r=>
+          `${r.algo}: waiting=${fmt(r.wait)}, turnaround=${fmt(r.turn)}, response=${fmt(r.resp)}`
+      )
+      .join("\n");
+
+  const a=document.createElement("a");
+
+  a.href=
+    URL.createObjectURL(
+      new Blob(
+        [text],
+        {type:"text/plain"}
+      )
+    );
+
+  a.download="os-simx-results.txt";
+
+  a.click();
+
+  URL.revokeObjectURL(a.href);
+
+  toast("Results exported");
+
+}
+
+const titles={
+
+  dashboard:[
+    "System Overview",
+    "Explore how an OS schedules processes and manages constrained resources."
+  ],
+
+  scheduler:[
+    "CPU Scheduling",
+    "Compare scheduling policies through execution traces and measurable performance."
+  ],
+
+  memory:[
+    "Memory Manager",
+    "Visualize contiguous allocation strategies and external fragmentation."
+  ],
+
+  deadlock:[
+    "Deadlock Laboratory",
+    "Detect circular dependencies and evaluate safe states with Banker’s algorithm."
+  ],
+
+  disk:[
+    "Disk Scheduler",
+    "Analyze auxiliary-storage scheduling and total head movement."
+  ],
+
+  experiments:[
+    "Experiment Lab",
+    "Use identical workloads to make evidence-based OS design decisions."
+  ]
+
+};
+
+document
+  .querySelectorAll(".nav button")
+  .forEach(btn=>{
+
+    btn.addEventListener("click",()=>{
+
+      document
+        .querySelectorAll(".nav button")
+        .forEach(
+          b=>b.classList.remove("active")
+        );
+
+      btn.classList.add("active");
+
+      document
+        .querySelectorAll(".page")
+        .forEach(
+          p=>p.classList.remove("active")
+        );
+
+      $(btn.dataset.page)
+        .classList.add("active");
+
+      $("pageTitle").textContent=
+        titles[btn.dataset.page][0];
+
+      $("pageSubtitle").textContent=
+        titles[btn.dataset.page][1];
+
+      if(
+        btn.dataset.page==="experiments" &&
+        state.lastExperiment
+      )
+        runExperiment();
+
+    });
+
+  });
+
+$("runSched").onclick=()=>{
+
+  const error=validateWorkload();
+
+  if(error){
+    toast(error);
+    return;
+  }
+
+  const a=$("schedAlgo").value;
+
+  const q=
+    Math.max(
+      1,
+      +$("quantum").value||1
+    );
+
+  const r=
+    simulate(
+      a,
+      q,
+      state.processes
+    );
+
+  $("gantt").innerHTML=
+    renderGantt(r.timeline);
+
+  const m=
+    Object.values(r.metrics);
+
+  $("avgWait").textContent=
+    fmt(
+      avg(
+        m.map(x=>x.wait)
+      )
+    );
+
+  $("avgTurn").textContent=
+    fmt(
+      avg(
+        m.map(x=>x.turn)
+      )
+    );
+
+  $("avgResp").textContent=
+    fmt(
+      avg(
+        m.map(x=>x.resp)
+      )
+    );
+
+  schedulingAnalysis(a,r);
+
+  drawBars(
+    "schedChart",
+    state.processes.map(
+      p=>({
+        pid:p.pid,
+        wait:r.metrics[p.pid].wait,
+        turn:r.metrics[p.pid].turn
+      })
+    )
+  );
+
+  toast(
+    `${a} scheduler completed`
+  );
+
+};
+
+$("addProcess").onclick=
+  addProcess;
+
+$("loadSched").onclick=()=>{
+
+  state.processes=[
+
+    {
+      pid:"P1",
+      arrival:0,
+      burst:7,
+      priority:2,
+      memory:180
+    },
+
+    {
+      pid:"P2",
+      arrival:1,
+      burst:4,
+      priority:1,
+      memory:120
+    },
+
+    {
+      pid:"P3",
+      arrival:2,
+      burst:2,
+      priority:3,
+      memory:220
+    },
+
+    {
+      pid:"P4",
+      arrival:3,
+      burst:6,
+      priority:2,
+      memory:140
+    },
+
+    {
+      pid:"P5",
+      arrival:4,
+      burst:3,
+      priority:4,
+      memory:90
+    },
+
+    {
+      pid:"P6",
+      arrival:6,
+      burst:5,
+      priority:1,
+      memory:160
+    }
+
+  ];
+
+  renderProcTable();
+  renderDashboard();
+
+  toast("Demo workload loaded");
+
+};
+
+$("runMem").onclick=
+  allocateMemory;
+
+$("runBanker").onclick=
+  runBanker;
+
+$("loadDeadDemo").onclick=
+  loadDeadDemo;
+
+$("loadSafeDemo").onclick=
+  loadSafeDemo;
+
+$("runDisk").onclick=
+  runDisk;
+
+$("runExperiment").onclick=
+  runExperiment;
+
+$("exportResults").onclick=
+  exportResults;
+
+$("demoBtn").onclick=()=>{
+
+  renderProcTable();
+  allocateMemory();
+  runDisk();
+  runBanker();
+  runExperiment();
+
+  toast(
+    "Full OS-SimX demo executed"
+  );
+
+};
+
+$("resetBtn").onclick=()=>{
+  location.reload();
+};
+
+$("quantumField").style.display=
+  "grid";
+
+$("schedAlgo").onchange=()=>{
+
+  $("quantumField").style.opacity=
+    $("schedAlgo").value==="RR"
+    ? "1"
+    : ".55";
+
+};
+
+window.addEventListener(
+  "resize",
+  ()=>{
+
+    if(
+      $("scheduler").classList.contains("active")
+    ){
+
+      const r=
+        simulate(
+          $("schedAlgo").value,
+          +$("quantum").value,
+          state.processes
+        );
+
+      drawBars(
+        "schedChart",
+        state.processes.map(
+          p=>({
+            pid:p.pid,
+            wait:r.metrics[p.pid].wait,
+            turn:r.metrics[p.pid].turn
+          })
+        )
+      );
+
+    }
+
+  }
+);
+
+$("compareDisk")
+  .addEventListener(
+    "click",
+    compareDiskAlgorithms
+  );
+
+renderProcTable();
+renderDashboard();
+allocateMemory();
+renderResources();
+renderRAG();
+runDisk();
+
+</script>
+</body>
+</html>
